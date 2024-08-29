@@ -45,23 +45,26 @@ class LocationViewController: UIViewController {
     func setupSubscriptions() {
         viewModel.$locationPermissionMessage
             .receive(on: DispatchQueue.main)
-            .sink { title in
-                self.locationButton.setTitle(title, for: .normal)
+            .sink { [weak self] title in
+                self?.locationButton.setTitle(title, for: .normal)
             }.store(in: &subs)
         viewModel.$currentLocationWeather
             .receive(on: DispatchQueue.main)
-            .sink { result in
+            .sink { [weak self] result in
                 switch result {
                 case .success(let weatherInfo):
-                    self.setWeatherInfo(weatherInfo: weatherInfo)
+                    self?.setWeatherInfo(weatherInfo: weatherInfo)
                 case .failure(let error):
-                    self.setErrorMessage(error: error)
+                    self?.setErrorMessage(error: error)
                 case .none:
                     print("Unknown error")
                 }
             }.store(in: &subs)
     }
     
+    /* Ideally hiding of views should be decided by viewmodel. This can be done by using a publisher binding for each UI segment
+     We can have  different published properties to show/hide different controls. With this way everything is controlled by ViewModel
+     */
     func setWeatherInfo(weatherInfo: WeatherInfo) {
         nameLabel.text = "Current Location: \(weatherInfo.name)"
         tempLabel.text = "Current Temp: \(weatherInfo.temparature.tempInCelsius)"
@@ -70,6 +73,7 @@ class LocationViewController: UIViewController {
         errorLabel.isHidden = true
         locationButton.isHidden = true
     }
+    
     
     func setErrorMessage(error: String) {
         errorLabel.text = error
