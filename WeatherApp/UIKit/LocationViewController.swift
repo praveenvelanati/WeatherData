@@ -9,7 +9,7 @@ import UIKit
 import SwiftUI
 import Combine
 
-class LocationViewController: UIViewController {
+final class LocationViewController: UIViewController {
     
     var subs = Set<AnyCancellable>()
     @IBOutlet var locationButton: UIButton!
@@ -41,7 +41,7 @@ class LocationViewController: UIViewController {
         viewModel.requestLocation()
     }
     
-    
+    // Data Bindings with ViewModel
     func setupSubscriptions() {
         viewModel.$locationPermissionMessage
             .receive(on: DispatchQueue.main)

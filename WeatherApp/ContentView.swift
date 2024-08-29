@@ -9,7 +9,6 @@ import SwiftUI
 
 struct ContentView: View {
     @State private var location: String = ""
-    @AppStorage("locationCache") private var previousLocation: String = ""
     @StateObject var viewModel: WeatherViewModel
     var body: some View {
         NavigationStack {
@@ -19,13 +18,14 @@ struct ContentView: View {
                         TextField("Enter Location", text: $location)
                             .textFieldStyle(.roundedBorder)
                         Button {
-                            previousLocation = location
                             Task {
                                 await viewModel.weatherForSearch(city: location)
                             }
                         } label: {
                             Text("Get Weather Info")
-                        }.buttonStyle(.borderedProminent)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(location.count < 2)
                         if let info = viewModel.requestedLocationWeather {
                             LocationWeatherCard(weatherResult: info)
                         }

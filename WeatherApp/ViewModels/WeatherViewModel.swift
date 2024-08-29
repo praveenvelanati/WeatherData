@@ -41,8 +41,13 @@ final class WeatherViewModel: ObservableObject {
     @MainActor func weatherForSearch(city: String) async {
         do {
             requestedLocationWeather = .success(try await weatherForAcity(city: city))
+            UserDefaults.standard.setValue(city, forKey: "locationCache")
         } catch {
-            requestedLocationWeather = .failure(error.localizedDescription)
+            if let networkError = error as? NetworkError {
+                requestedLocationWeather = .failure(networkError.descriptiveMessage)
+            } else {
+                requestedLocationWeather = .failure(error.localizedDescription)
+            }
         }
     }
     
@@ -51,7 +56,11 @@ final class WeatherViewModel: ObservableObject {
         do {
             previousLocationWeather = .success(try await weatherForAcity(city: city))
         } catch {
-            previousLocationWeather = .failure(error.localizedDescription)
+            if let networkError = error as? NetworkError {
+                previousLocationWeather = .failure(networkError.descriptiveMessage)
+            } else {
+                previousLocationWeather = .failure(error.localizedDescription)
+            }
         }
     }
     

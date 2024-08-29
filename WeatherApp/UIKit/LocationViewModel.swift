@@ -65,7 +65,11 @@ class LocationViewModel: ObservableObject {
         do {
             currentLocationWeather = .success(try await service.getWeather(httpEndpoint: httpEndpoint))
         } catch {
-            currentLocationWeather = .failure(error.localizedDescription)
+            if let networkError = error as? NetworkError {
+                currentLocationWeather = .failure(networkError.descriptiveMessage)
+            } else {
+                currentLocationWeather = .failure(error.localizedDescription)
+            }
         }
     }
     

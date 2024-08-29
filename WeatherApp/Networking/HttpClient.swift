@@ -33,4 +33,13 @@ enum NetworkError: Error {
     case invalidRequest
     case invalidResponse
     case decodingError
+    
+    var descriptiveMessage: String {
+        switch self {
+        case .invalidRequest:
+            return "The Requested location doesnt exist"
+        case .invalidResponse, .decodingError:
+            return "Internal Error. Please try again later"
+        }
+    }
 }
