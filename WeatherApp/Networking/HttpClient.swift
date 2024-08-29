@@ -8,9 +8,6 @@
 import Foundation
 
 
-
-
-
 struct HttpClient {
     
     let session: URLSession
@@ -25,11 +22,16 @@ struct HttpClient {
     }
     
     func decode<T: Decodable>(data: Data) throws -> T {
-         return try decoder.decode(T.self, from: data)
+        do {
+            return try decoder.decode(T.self, from: data)
+        } catch {
+            throw NetworkError.decodingError
+        }
     }
 }
 
 enum NetworkError: Error {
     case invalidRequest
     case invalidResponse
+    case decodingError
 }

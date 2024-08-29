@@ -19,7 +19,8 @@ struct HTTPEndpoint {
         urlComponents.scheme = scheme
         urlComponents.host = domain
         urlComponents.path = path
-        guard let url = urlComponents.url else {
+        urlComponents.queryItems = queryItems
+        guard urlComponents.url != nil else {
             return nil
         }
         return urlComponents.url

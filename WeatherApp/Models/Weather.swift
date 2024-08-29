@@ -7,12 +7,13 @@
 
 import Foundation
 
+// Here all the properties could be optional as there is documentation on it, assuming that these are not for simplicity
 struct Coordinates: Codable {
     let lat: Double
     let lon: Double
 }
 
-struct Weather: Codable {
+struct WeatherCondition: Codable {
     let id: Int
     let main: String
     let description: String
@@ -26,14 +27,17 @@ struct Main: Codable {
     let tempMax: Double
 }
 
-struct Clouds: Codable {
-    let all: CGFloat
-}
-struct Rain: Codable {
-    let oneHour: CGFloat
+struct WeatherInfo: Codable {
+    let main: Main?
+    let weather: [WeatherCondition]
+    let name: String?
     
-    enum CodingKeys: String, CodingKey {
-        case oneHour = "1h"
+    var firstMatch: WeatherCondition? {
+        weather.first
     }
+    
+    var iconURL: URL? {
+        URL(string: "https://openweathermap.org/img/wn/\(firstMatch?.icon ?? "")@2x.png")
+    }
+    
 }
-

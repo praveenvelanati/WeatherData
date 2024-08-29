@@ -9,9 +9,17 @@ import SwiftUI
 
 @main
 struct WeatherAppApp: App {
+    
+    
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ContentView(viewModel: .init(service: WeatherService(httpClient: .init(session: .shared, decoder: getDecoder()))))
         }
+    }
+    
+    func getDecoder() -> JSONDecoder {
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        return decoder
     }
 }
