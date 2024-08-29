@@ -7,9 +7,8 @@
 
 import Foundation
 
-
+// Ideally HttpClient should conform to a protocol in which session can be mocked.
 struct HttpClient {
-    
     let session: URLSession
     let decoder: JSONDecoder
     

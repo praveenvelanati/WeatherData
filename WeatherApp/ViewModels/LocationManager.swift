@@ -8,17 +8,11 @@
 import Foundation
 import CoreLocation
 
-class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
+final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     
     let locationManager = CLLocationManager()
     
-    var authStatus: CLAuthorizationStatus {
-        return locationManager.authorizationStatus
-    }
-    
-    var shouldRequestPermission: Bool {
-        return authStatus == .notDetermined
-    }
+    @Published var authStatus: CLAuthorizationStatus?
     
     var locationPermissionAvailable: Bool {
         return authStatus == .authorizedWhenInUse || authStatus == .authorizedAlways
@@ -32,7 +26,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     
     override init() {
         super.init()
-       locationManager.delegate = self
+        locationManager.delegate = self
     }
     
     func requestLocation() {
@@ -42,6 +36,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
             locationManager.requestWhenInUseAuthorization()
         }
     }
+    
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         currentLocation = locations.first?.coordinate
     }
@@ -51,6 +46,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     }
     
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        authStatus = manager.authorizationStatus
         locationManager.requestLocation()
     }
 }

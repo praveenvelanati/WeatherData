@@ -10,27 +10,61 @@ import XCTest
 
 final class WeatherAppTests: XCTestCase {
 
-    override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
+    var sut: WeatherViewModel!
+    
+    override func tearDown() {
+        super.tearDown()
+        sut = nil
     }
 
-    override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
-    }
-
-    func testExample() throws {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
-        // Any test you write for XCTest can be annotated as throws and async.
-        // Mark your test throws to produce an unexpected failure when your test encounters an uncaught error.
-        // Mark your test async to allow awaiting for asynchronous code to complete. Check the results with assertions afterwards.
-    }
-
-    func testPerformanceExample() throws {
-        // This is an example of a performance test case.
-        self.measure {
-            // Put the code you want to measure the time of here.
+    func testWeatherForSearchWithError() async {
+        let mockService = MockWeatherService(throwError: true)
+        sut = WeatherViewModel(service: mockService)
+        await sut.weatherForSearch(city: "")
+        switch sut.requestedLocationWeather {
+        case .success(_):
+            XCTFail()
+        case .failure(let error):
+            XCTAssert(!error.isEmpty)
+        case .none:
+            XCTFail()
         }
     }
+    
+    func testWeatherForSearchWithData() async {
+        let mockService = MockWeatherService(throwError: false)
+        sut = WeatherViewModel(service: mockService)
+        await sut.weatherForSearch(city: "Plano")
+        switch sut.requestedLocationWeather {
+        case .success(let info):
+            XCTAssertNotNil(info.name)
+        case .failure(_):
+            XCTFail()
+        case .none:
+            XCTFail()
+        }
+    }
+    
+    func testWeatherForACityWithEmpty() async {
+        let mockService = MockWeatherService(throwError: false)
+        sut = WeatherViewModel(service: mockService)
+        do {
+            _ = try await sut.weatherForAcity(city: "")
+            XCTFail()
+        } catch {
+            XCTAssertNotNil(error)
+        }
+    }
+}
 
+struct MockWeatherService: WeatherServiceType {
+    
+    var throwError: Bool
+    func getWeather(httpEndpoint: WeatherApp.HTTPEndpoint) async throws -> WeatherApp.WeatherInfo {
+        if throwError {
+            throw "Invalid Response"
+        } else {
+            return WeatherInfo(temparature: .init(temp: 10.00, feelsLike: 15.00, tempMin: 15.00, tempMax: 15.00), weatherConditions: [], name: "Plano")
+        }
+    }
 }

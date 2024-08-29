@@ -11,38 +11,25 @@ import CoreLocation
 
 extension String: Error { }
 
-class WeatherViewModel: ObservableObject {
+final class WeatherViewModel: ObservableObject {
+    // Stores subscription for location updates
     var subscriptions = Set<AnyCancellable>()
+    // Data for Requested location. Contains both Model and error
     @Published var requestedLocationWeather: Result<WeatherInfo, String>?
-    @Published var currentLocationWeather: Result<WeatherInfo, String>?
+    // Data for Previous location. Contains both Model and error
     @Published var previousLocationWeather: Result<WeatherInfo, String>?
-    private var locationManager = LocationManager()
+    
     let service: WeatherServiceType
+    let baseEndpoint = HTTPEndpoint(scheme: "https", domain: "api.openweathermap.org", path: "/data/2.5/weather", headers: nil, queryItems: [URLQueryItem(name: "appid", value: "3431298cbcb1efb08600238c3490fb89")], httpMethod: "GET")
     
-    var shouldRequestPermission: Bool {
-        return locationManager.shouldRequestPermission
-    }
-    
-    var locationPermissionAvailable: Bool {
-        return locationManager.locationPermissionAvailable
-    }
-    
-    var permissionDenied: Bool {
-        return locationManager.permissionDenied
-    }
     init(service: WeatherServiceType) {
         self.service = service
-        locationManager.$currentLocation
-            .receive(on: DispatchQueue.main)
-            .sink { location in
-                guard let currentLocation = location else {
-                    return
-                }
-                Task {
-                   await self.weatherForLocation(location: currentLocation)
-                }
-            }
-            .store(in: &subscriptions)
+        getWeatherForPreviousLocation()
+    }
+    
+    
+    // Here we can have take the user defaults and key as parameters and unit the function using inMemory user defaults suit.
+    private func getWeatherForPreviousLocation() {
         if let previousLocation = UserDefaults.standard.value(forKey: "locationCache") as? String {
             Task {
                 await weatherForStoredLocation(city: previousLocation)
@@ -50,10 +37,7 @@ class WeatherViewModel: ObservableObject {
         }
     }
     
-    func requestLocation() {
-        locationManager.requestLocation()
-    }
-    
+    // Gets Weather Info for Search item
     @MainActor func weatherForSearch(city: String) async {
         do {
             requestedLocationWeather = .success(try await weatherForAcity(city: city))
@@ -62,6 +46,7 @@ class WeatherViewModel: ObservableObject {
         }
     }
     
+    // Gets Weather Info for stored item
     @MainActor func weatherForStoredLocation(city: String) async {
         do {
             previousLocationWeather = .success(try await weatherForAcity(city: city))
@@ -70,27 +55,16 @@ class WeatherViewModel: ObservableObject {
         }
     }
     
+    // Gets Weather Info for a city.
     @MainActor func weatherForAcity(city: String) async throws -> WeatherInfo {
         guard !city.isEmpty else {
             throw "Validation Error"
         }
-        let queryItem1 = URLQueryItem(name: "q", value: city)
-        let queryItem2 = URLQueryItem(name: "appid", value: "3431298cbcb1efb08600238c3490fb89")
-        let httpEndpoint = HTTPEndpoint(scheme: "https", domain: "api.openweathermap.org", path: "/data/2.5/weather", headers: nil, queryItems: [queryItem1, queryItem2], httpMethod: "GET")
+        let queryItem = URLQueryItem(name: "q", value: city)
+        var httpEndpoint = baseEndpoint
+        httpEndpoint.queryItems?.append(queryItem)
         return try await service.getWeather(httpEndpoint: httpEndpoint)
     }
-    
-    @MainActor func weatherForLocation(location: CLLocationCoordinate2D) async {
-        let queryItem1 = URLQueryItem(name: "lat", value: "\(location.latitude)")
-        let queryItem2 = URLQueryItem(name: "lon", value: "\(location.longitude)")
-         let queryItem3 = URLQueryItem(name: "appid", value: "3431298cbcb1efb08600238c3490fb89")
-         let httpEndpoint = HTTPEndpoint(scheme: "https", domain: "api.openweathermap.org", path: "/data/2.5/weather", headers: nil, queryItems: [queryItem1, queryItem2, queryItem3], httpMethod: "GET")
-         do {
-             currentLocationWeather = .success(try await service.getWeather(httpEndpoint: httpEndpoint))
-         } catch {
-             currentLocationWeather = .failure(error.localizedDescription)
-         }
-     }
     
 }
 

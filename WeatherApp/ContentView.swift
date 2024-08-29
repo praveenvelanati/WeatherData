@@ -12,57 +12,42 @@ struct ContentView: View {
     @AppStorage("locationCache") private var previousLocation: String = ""
     @StateObject var viewModel: WeatherViewModel
     var body: some View {
-        List {
-            Section {
-                VStack {
-                    TextField("Enter Location", text: $location)
-                        .textFieldStyle(.roundedBorder)
-                    Button {
-                        previousLocation = location
-                        Task {
-                            await viewModel.weatherForSearch(city: location)
-                        }
-                    } label: {
-                        Text("Get Weather Info")
-                    }.buttonStyle(.borderedProminent)
-                    if let info = viewModel.requestedLocationWeather {
-                        LocationWeatherCard(weatherResult: info)
-                    }
-                }
-            }
-            
-            Section {
-                VStack {
-                    if viewModel.permissionDenied {
-                        Text("Location permission denied. Please go to settings to give location permissions")
-                    } else if viewModel.shouldRequestPermission {
-                        Button {
-                            viewModel.requestLocation()
-                        } label: {
-                            Text("Grant Location Permission")
-                        }.buttonStyle(.borderedProminent)
-                    } else {
-                        if let currentLocationWeather = viewModel.currentLocationWeather {
-                            LocationWeatherCard(weatherResult: currentLocationWeather)
-                        } else {
-                            ProgressView {
-                                Text("Fetching weather info for current location")
-                            }
-                        }
-                    }
-                }
-            } header: {
-                Text("Current Location")
-            }
-            
-            if let previousLocationWeather = viewModel.previousLocationWeather {
+        NavigationStack {
+            List {
                 Section {
-                    LocationWeatherCard(weatherResult: previousLocationWeather)
-                } header: {
-                    Text("Previous Location")
+                    VStack {
+                        TextField("Enter Location", text: $location)
+                            .textFieldStyle(.roundedBorder)
+                        Button {
+                            previousLocation = location
+                            Task {
+                                await viewModel.weatherForSearch(city: location)
+                            }
+                        } label: {
+                            Text("Get Weather Info")
+                        }.buttonStyle(.borderedProminent)
+                        if let info = viewModel.requestedLocationWeather {
+                            LocationWeatherCard(weatherResult: info)
+                        }
+                    }
                 }
+                
+                if let previousLocationWeather = viewModel.previousLocationWeather {
+                    Section {
+                        LocationWeatherCard(weatherResult: previousLocationWeather)
+                    } header: {
+                        Text("Previous Location")
+                    }
+                }
+                
+                Section {
+                    NavigationLink(destination: MyLocationView().navigationTitle("My Location")) {
+                        Text("Get My Location")
+                    }
+                }
+                
             }
-            
+            .navigationTitle("Weather Report")
         }
     }
 }
@@ -74,9 +59,9 @@ struct LocationWeatherCard: View {
         switch weatherResult {
         case .success(let info):
             VStack(alignment: .leading) {
-                Text("Location: ") + Text(info.name ?? "")
-                Text("Current Temp: \(info.main?.temp ?? 0.0)")
-                Text("Feels like: \(info.main?.feelsLike ?? 0.0)")
+                Text("Location: ") + Text(info.name)
+                Text("Current Temp: ")  + Text(info.temparature.tempInCelsius)
+                Text("Feels like: ") + Text(info.temparature.feelsLikeInCelsius)
                 HStack {
                     AsyncImage(url: info.iconURL) { phase in
                         switch phase {
@@ -93,8 +78,8 @@ struct LocationWeatherCard: View {
                         }
                     }
                     VStack(alignment: .leading) {
-                        Text(info.weather.first?.main ?? "")
-                        Text(info.weather.first?.description ?? "")
+                        Text(info.prominentCondition?.main ?? "")
+                        Text(info.prominentCondition?.description ?? "")
                     }
                 }
             }

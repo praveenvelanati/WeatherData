@@ -12,7 +12,7 @@ struct HTTPEndpoint {
     let domain: String
     let path: String
     let headers: [String: String]?
-    let queryItems: [URLQueryItem]?
+    var queryItems: [URLQueryItem]?
     let httpMethod: String
     var url: URL? {
         var urlComponents = URLComponents()
